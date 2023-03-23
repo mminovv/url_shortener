@@ -19,9 +19,7 @@ class ShortenedUrlList(GenericViewSet, ListModelMixin):
 
         if serializer.is_valid():
             token = generate_token()
-            if ShortenedUrl.objects.filter(token=token).exists():
-                token = generate_token()
-                shortened_url = f"{request.get_host()}/shortener/{token}"
+            shortened_url = f"{request.get_host()}/shortener/{token}"
             serializer.save(shortened_url=shortened_url, token=token)
             return Response(serializer.data)
 
