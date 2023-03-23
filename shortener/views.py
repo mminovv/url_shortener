@@ -16,15 +16,15 @@ class ShortenedUrlList(GenericViewSet, ListModelMixin):
     @action(detail=False, methods=["post"])
     def create(self, request):
         serializer = ShortenedUrlSerializer(data=request.data)
+
         if serializer.is_valid():
             token = generate_token()
-            while True:
-                if not ShortenedUrl.objects.filter(token=token).exists():
-                    token = generate_token()
-                    shortened_url = f"{request.get_host()}/shortener/{token}"
-                    break
+            if ShortenedUrl.objects.filter(token=token).exists():
+                token = generate_token()
+                shortened_url = f"{request.get_host()}/shortener/{token}"
             serializer.save(shortened_url=shortened_url, token=token)
             return Response(serializer.data)
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=False, methods=["get"])
