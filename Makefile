@@ -8,9 +8,9 @@ all:
 	@echo "make static		- Collect static"
 	@exit 0
 up:
-	docker-compose up --build -d
+	docker-compose up -d --no-deps --build
 logs:
-	docker logs --follow --timestamps shortener_web
+	docker logs --follow --tail 20 --timestamps shortener_web
 exec:
 	docker exec -it shortener_web bash
 migrations:
@@ -20,6 +20,6 @@ migrate:
 restart:
 	docker restart shortener_web
 lint:
-	docker exec -it shortener_web black .
+	black shortener/ && flake8 --ignore=E501 --exclude=venv,docs .
 static:
 	docker exec -it shortener_web python manage.py collectstatic

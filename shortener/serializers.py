@@ -8,7 +8,8 @@ class ShortenedUrlSerializer(serializers.ModelSerializer):
         fields = (
             "original_url",
             "shortened_url",
+            "token",
             "created",
             "clicks",
         )
-        read_only_fields = ("created", "clicks", "shortened_url")
+        read_only_fields = ("created", "clicks", "shortened_url", "token")

@@ -1,47 +1,35 @@
-import secrets
-
-from django.shortcuts import get_object_or_404
-from django.http import Http404
-from django.shortcuts import redirect
-from drf_spectacular.utils import extend_schema
+from django.shortcuts import get_object_or_404, redirect
 from rest_framework import status
 from rest_framework.mixins import ListModelMixin
 from rest_framework.response import Response
-from rest_framework.decorators import api_view
+from rest_framework.decorators import action
+from rest_framework.viewsets import GenericViewSet
 from .models import ShortenedUrl
 from .serializers import ShortenedUrlSerializer
-from rest_framework.viewsets import GenericViewSet
+from .utils import generate_token
 
 
 class ShortenedUrlList(GenericViewSet, ListModelMixin):
     queryset = ShortenedUrl.objects.all()
     serializer_class = ShortenedUrlSerializer
 
+    @action(detail=False, methods=["post"])
+    def create(self, request):
+        serializer = ShortenedUrlSerializer(data=request.data)
+        if serializer.is_valid():
+            token = generate_token()
+            while True:
+                if not ShortenedUrl.objects.filter(token=token).exists():
+                    token = generate_token()
+                    shortened_url = f"{request.get_host()}/shortener/{token}"
+                    break
+            serializer.save(shortened_url=shortened_url, token=token)
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-@extend_schema(
-    request=ShortenedUrlSerializer,
-    responses={201: ShortenedUrlSerializer}
-)
-@api_view(["POST"])
-def create_shortened_url(request):
-    serializer = ShortenedUrlSerializer(data=request.data)
-    if serializer.is_valid():
-        shortened_url = secrets.token_urlsafe(4)[:6]
-        while ShortenedUrl.objects.filter(shortened_url=shortened_url).exists():
-            shortened_url = secrets.token_urlsafe(4)[:6]
-        serializer.save(shortened_url=shortened_url)
-        return Response(serializer.data)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-@api_view(["GET"])
-def redirect_shortened_url(request, shortened_url):
-    try:
-        shortened_url = get_object_or_404(ShortenedUrl, shortened_url=shortened_url)
-        shortened_url.clicks += 1
-        shortened_url.save()
-        return redirect(shortened_url.original_url)
-    except Http404:
-        return Response(
-            {"error": "Shortened URL does not exist"}, status=status.HTTP_404_NOT_FOUND
-        )
+    @action(detail=False, methods=["get"])
+    def redirect(self, request, token=None):
+        shortened_url_obj = get_object_or_404(ShortenedUrl, token=token)
+        shortened_url_obj.clicks += 1
+        shortened_url_obj.save()
+        return redirect(shortened_url_obj.original_url)

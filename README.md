@@ -1,40 +1,85 @@
-## Configuration
-Configuration is stored in `.env`, for examples see `.env.examples`
-* This project requires python3.9 and sqlite or Postgres(with Docker).
+# News App
 
-## Installing on a local machine with Docker
+Url shortener app is a test assessment for Tranio
 
-See all commands:
-```sh
-make all
+## Table of Contents
+
+* [Setup](#setup)
+* [Documentation](#documentation)
+* [Linting & Formatting](#linting-and-formatting)
+
+## Setup
+### With Docker
+
+Install [docker](https://www.docker.com/get-started) and [docker-compose](https://docs.docker.com/compose/)
+
+After installation run the following command
+```bash
+docker-compose up -d --no-deps --build
 ```
 
-Up project:
-```sh
-make up
-```
+And you are good to go
 
 
-## Installing on a local machine with venv
-* This project requires python3.9 and sqlite or Postgres(with Docker).
-* Create and activate your virtual environment
+### Without Docker
 
-Install requirements:
+*The following setup is for Linux users only*
 
-```sh
-python3 -m venv venv
-source venv/bin/activate # unix system
-pip install -r requirements.txt
-cp .env.example .env  # default environment variables
-```
-
-```sh
-./manage.py migrate
-./manage.py createsuperuser
-```
-Development servers:
+Create virtual environment
 
 ```bash
-# run django dev server
-$ ./manage.py runserver
+python3 -m venv venv
+```
 
+Activate it
+
+```bash
+source venv/bin/activate
+```
+
+Use the package manager [pip](https://pip.pypa.io/en/stable/) to install requirements.
+
+```bash
+pip3 install -r requirements.txt
+```
+
+Create .env and .db.env files.
+Set the environment variables. 
+Use this command:
+```bash
+cp .env.example .env
+```
+
+
+Use `migrate` command to create tables and set relationships in your database.
+
+```bash
+python3 manage.py migrate
+```
+
+or
+
+```bash
+django-admin migrate
+```
+
+Run
+```bash
+python3 manage.py runserver
+```
+And you are good to go
+
+## Documentation
+
+* Link to the [docs](http://127.0.0.1:8000/docs/)
+## Linting and Formatting
+
+Linting completed with flake8
+```bash
+flake8 --ignore=E501 --exclude=venv,docs .
+```
+
+Formatting completed with black
+```bash
+black shortener/
+```
